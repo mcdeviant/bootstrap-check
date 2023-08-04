@@ -1,0 +1,24 @@
+       - |
+        #!/bin/bash
+      
+        for i in {1..6}
+        do
+            RESULT=$(aws logs filter-log-events --log-group-name $LOG_GROUP --filter-pattern "Bootstrap Success" --query 'events[0].eventId' --output text)
+            if [ -z "$RESULT" ]; then
+                echo "Bootstrap not complete yet, retrying in 5 minutes"
+                sleep 300
+            else
+                echo "BOOTSTRAP SUCCESS!"
+                exit 0
+            fi
+        done
+      
+        echo "SUCCESS MESSAGE NOT FOUND, SEARCHING FOR FAILURES"
+      
+       - |
+        #!/bin/bash
+        RESULT=$(aws logs filter-log-events --log-group-name $LOG_GROUP --filter-pattern "failed" --query 'events[0].message' --output text)
+        if [ ! -z "$RESULT" ]; then
+            echo "$RESULT"
+            exit 1
+        fi
